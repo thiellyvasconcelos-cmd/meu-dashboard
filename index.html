@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard · Visão Geral</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --border: #1e1e2e;
+      --accent: #c8f55a;
+      --accent2: #5af5c8;
+      --accent3: #f55a8a;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --card: #14141f;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 40px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* KPI row */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .kpi:nth-child(1) { animation-delay: 0.1s; }
+    .kpi:nth-child(2) { animation-delay: 0.2s; }
+    .kpi:nth-child(3) { animation-delay: 0.3s; }
+    .kpi:nth-child(4) { animation-delay: 0.4s; }
+
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+    }
+    .kpi:nth-child(1)::before { background: var(--accent); }
+    .kpi:nth-child(2)::before { background: var(--accent2); }
+    .kpi:nth-child(3)::before { background: var(--accent3); }
+    .kpi:nth-child(4)::before { background: #a55af5; }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .kpi-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .kpi:nth-child(1) .kpi-value { color: var(--accent); }
+    .kpi:nth-child(2) .kpi-value { color: var(--accent2); }
+    .kpi:nth-child(3) .kpi-value { color: var(--accent3); }
+    .kpi:nth-child(4) .kpi-value { color: #a55af5; }
+
+    .kpi-delta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .kpi-delta.up { color: var(--accent); }
+    .kpi-delta.down { color: var(--accent3); }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      animation: fadeUp 0.7s ease both;
+      animation-delay: 0.5s;
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+
+    /* Bar chart */
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 140px;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      transition: opacity 0.2s;
+      animation: growUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .bar:hover { opacity: 0.8; }
+
+    .bar-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* Donut chart (CSS only) */
+    .donut-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .donut {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--accent) 0% 42%,
+        var(--accent2) 42% 67%,
+        var(--accent3) 67% 85%,
+        #a55af5 85% 100%
+      );
+      position: relative;
+      animation: spin-in 0.8s ease both 0.6s;
+    }
+
+    .donut::after {
+      content: '';
+      position: absolute;
+      inset: 28px;
+      background: var(--card);
+      border-radius: 50%;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-pct {
+      margin-left: auto;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Table */
+    .table-wrap {
+      animation: fadeUp 0.7s ease both;
+      animation-delay: 0.6s;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .status.ok { background: rgba(200,245,90,0.1); color: var(--accent); }
+    .status.warn { background: rgba(245,90,138,0.1); color: var(--accent3); }
+    .status.mid { background: rgba(90,245,200,0.1); color: var(--accent2); }
+
+    .status::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Sparkline (mini bar) */
+    .spark {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 24px;
+    }
+    .spark-bar {
+      width: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+    .spark-bar:last-child { opacity: 1; }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes growUp {
+      from { transform: scaleY(0); transform-origin: bottom; }
+      to   { transform: scaleY(1); transform-origin: bottom; }
+    }
+    @keyframes spin-in {
+      from { transform: rotate(-90deg) scale(0.8); opacity: 0; }
+      to   { transform: rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: 1fr; }
+      header, .main { padding: 20px; }
+      .kpi-value { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">dash<span>.</span>test</div>
+  <div class="badge">● Live</div>
+</header>
+
+<main class="main">
+  <div class="section-title">Visão Geral — Abril 2026</div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Receita Total</div>
+      <div class="kpi-value">R$284k</div>
+      <div class="kpi-delta up">↑ +12.4% vs mês ant.</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Usuários Ativos</div>
+      <div class="kpi-value">18.3k</div>
+      <div class="kpi-delta up">↑ +8.1% vs mês ant.</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-value">2.7%</div>
+      <div class="kpi-delta down">↑ +0.3pp vs mês ant.</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">NPS Score</div>
+      <div class="kpi-value">71</div>
+      <div class="kpi-delta up">↑ +4 pts vs mês ant.</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Bar Chart -->
+    <div class="panel">
+      <div class="panel-title">Receita por Semana</div>
+      <div class="bars" id="barChart"></div>
+    </div>
+
+    <!-- Donut -->
+    <div class="panel">
+      <div class="panel-title">Canais de Aquisição</div>
+      <div class="donut-wrap">
+        <div class="donut"></div>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent)"></div>
+            Orgânico
+            <span class="legend-pct">42%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent2)"></div>
+            Pago
+            <span class="legend-pct">25%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent3)"></div>
+            Indicação
+            <span class="legend-pct">18%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#a55af5"></div>
+            Outros
+            <span class="legend-pct">15%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="section-title">Produtos em Destaque</div>
+  <div class="panel table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Receita</th>
+          <th>Unidades</th>
+          <th>Tendência</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Plano Pro</td>
+          <td>R$ 142.400</td>
+          <td>1.184</td>
+          <td><div class="spark" id="s1"></div></td>
+          <td><span class="status ok">Saudável</span></td>
+        </tr>
+        <tr>
+          <td>Plano Starter</td>
+          <td>R$ 83.200</td>
+          <td>2.080</td>
+          <td><div class="spark" id="s2"></div></td>
+          <td><span class="status mid">Estável</span></td>
+        </tr>
+        <tr>
+          <td>Add-ons</td>
+          <td>R$ 41.600</td>
+          <td>520</td>
+          <td><div class="spark" id="s3"></div></td>
+          <td><span class="status ok">Saudável</span></td>
+        </tr>
+        <tr>
+          <td>Plano Enterprise</td>
+          <td>R$ 16.800</td>
+          <td>14</td>
+          <td><div class="spark" id="s4"></div></td>
+          <td><span class="status warn">Atenção</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  // Bar chart
+  const weeks = ['S1','S2','S3','S4','S5','S6','S7','S8'];
+  const values = [42, 58, 51, 73, 65, 80, 69, 94];
+  const colors = ['var(--accent2)','var(--accent2)','var(--accent2)','var(--accent2)',
+                  'var(--accent2)','var(--accent2)','var(--accent2)','var(--accent)'];
+  const max = Math.max(...values);
+  const container = document.getElementById('barChart');
+
+  weeks.forEach((w, i) => {
+    const pct = (values[i] / max) * 100;
+    container.innerHTML += `
+      <div class="bar-wrap">
+        <div class="bar" style="height:${pct}%;background:${colors[i]};animation-delay:${0.05*i+0.5}s"></div>
+        <div class="bar-label">${w}</div>
+      </div>`;
+  });
+
+  // Sparklines
+  function spark(id, data, color='var(--accent)') {
+    const el = document.getElementById(id);
+    const max = Math.max(...data);
+    data.forEach(v => {
+      const b = document.createElement('div');
+      b.className = 'spark-bar';
+      b.style.height = `${(v/max)*100}%`;
+      b.style.background = color;
+      el.appendChild(b);
+    });
+  }
+
+  spark('s1', [60,72,65,80,78,90,88,95], 'var(--accent)');
+  spark('s2', [80,78,82,79,83,81,80,82], 'var(--accent2)');
+  spark('s3', [40,50,55,58,62,68,71,78], 'var(--accent)');
+  spark('s4', [90,75,60,55,50,48,42,38], 'var(--accent3)');
+</script>
+</body>
+</html>
